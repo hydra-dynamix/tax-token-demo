@@ -186,3 +186,11 @@ ETHP_TO_RECEIVE=$(echo "scale=2; $TAXAI_AMOUNT * 0.01" | bc)
    ```
 
 4. **Transaction Errors**: If you encounter Solana transaction errors, try increasing the transaction delay or check your Solana configuration.
+
+## Explorer links
+[Eth Token Proxy / ethyUia...1QrA](https://explorer.solana.com/address/ethyUiaWJQUbbct51haurMrY2wKYfHZL2W34FxD1QrA?cluster=devnet)
+[Tax Token Mint / mntgLj...hf4N](https://explorer.solana.com/address/mntgLjzvuB8wYjPXtFLCZ7D9NviJq4EP6WFdz8phf4N?cluster=devnet)
+[Swap Wallet](https://explorer.solana.com/address/815LJzAe2M3W6iMyjo1wKecFwAoGHxtm2eDaTGZaedNT?cluster=devnet)
+[Tax Wellet](https://explorer.solana.com/address/HekUf6CEYcQRAAMPhwAdjAqfUoWD2SbbUTfRZZN2Aqfe?cluster=devnet)
+[Recipient Wallet](https://explorer.solana.com/address/8SgyUKVE9tTPh43zbAJprf4X9MybkJhE6YdXJbxdgtyP?cluster=devnet)
+[Sender Wallet](https://explorer.solana.com/address/5ivfTtM3g4AwVw5XkfqLDK949qn9qP4JSfxyFGZhNgne?cluster=devnet)
