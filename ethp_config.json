@@ -1,0 +1,14 @@
+{
+    "token_name": "ETH Proxy",
+    "token_symbol": "ETHP",
+    "token_description": "Proxy token representing ETH for demonstration purposes",
+    "token_image": "https://github.com/hydra-dynamix/blog/blob/development/public/eth-icon.png?raw=true",
+    "token_decimals": 9,
+    "token_address": "HvvGvTgoRs4oaR2QenkxYpGQi5mcfwqZTB1quStZytzo",
+    "token_keypair": "./ethyUiaWJQUbbct51haurMrY2wKYfHZL2W34FxD1QrA.json",
+    "swap_wallet": "./keys/eth_swap.json",
+    "swap_wallet_address": "xRQ16zktW5JHYFHvFazuhkKxBvxqku2dXcGNgX4ytxD",
+    "swap_token_account": "CHZdB7Nw9P2urGJ9jqBEsEP3XDsL9k9MR4ksiA55aXFb",
+    "network": "devnet",
+    "creation_date": "2025-03-01T19:04:08Z"
+}

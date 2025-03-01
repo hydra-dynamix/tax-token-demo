@@ -1,0 +1,16 @@
+{
+    "token_name": "TaxAI",
+    "token_symbol": "TAXAI",
+    "token_description": "Test implementation of TaxAI Token",
+    "token_image": "https://github.com/hydra-dynamix/blog/blob/development/public/icon.png?raw=true",
+    "token_decimals": 9,
+    "token_address": "HYhKKxq8F4fUjQTTs1mDwXqHcWtUrorrhSJR2tUVpwCY",
+    "token_keypair": "./mntgLjzvuB8wYjPXtFLCZ7D9NviJq4EP6WFdz8phf4N.json",
+    "tax_percentage": 2.5,
+    "tax_wallet": "./keys/tax_collection.json",
+    "tax_wallet_address": "2Ao1J4XcBui6Yfd4XTd6pPKHEGRA4mt9eQaCvgsWvW3o",
+    "tax_token_account": "ES2ynNxeRUyj4WgrNYS4cXXFx79ryVjznELNKmNXfSXX",
+    "eth_purchase_address": "0x1234567890abcdef1234567890abcdef12345678",
+    "network": "devnet",
+    "creation_date": "2025-03-01T18:48:42Z"
+}
