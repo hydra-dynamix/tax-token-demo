@@ -4,6 +4,7 @@ set -euo pipefail
 # Default settings
 FULL_SPEED=false
 TRANSACTION_DELAY=0.75
+SWAP_AMOUNT=0
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -12,11 +13,20 @@ while [[ $# -gt 0 ]]; do
             FULL_SPEED=true
             shift
             ;;
+        --amount)
+            if [[ -z "$2" || "$2" =~ ^- ]]; then
+                echo "Error: --amount requires a numeric value"
+                exit 1
+            fi
+            SWAP_AMOUNT="$2"
+            shift 2
+            ;;
         --help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  --full-speed    Disable transaction delays"
+            echo "  --amount NUM    Specify the amount to swap (default: all available tax tokens)"
             echo "  --help          Display this help message"
             echo ""
             exit 0
@@ -96,8 +106,16 @@ load_configs() {
     TAXAI_KEYPAIR=$(grep -o '"token_keypair": "[^"]*' token_config.json | cut -d'"' -f4)
     # Fix paths to be relative to the current directory
     TAXAI_KEYPAIR="./keys/$(basename "$TAXAI_KEYPAIR")"
-    TAX_WALLET=$(grep -o '"tax_wallet": "[^"]*' token_config.json | cut -d'"' -f4)
-    TAX_WALLET="./keys/$(basename "$TAX_WALLET")"
+    TAX_WALLET="./keys/tax_wallet.json"
+    # Ensure the tax wallet exists
+    if [[ ! -f "$TAX_WALLET" ]]; then
+        log "ERROR" "Tax wallet not found: $TAX_WALLET"
+        log "INFO" "Creating tax wallet..."
+        solana-keygen new --outfile "$TAX_WALLET" --no-passphrase --force
+        chmod 600 "$TAX_WALLET"
+        # Fund the new wallet
+        solana airdrop 1 $(solana-keygen pubkey "$TAX_WALLET") || true
+    fi
     TAX_WALLET_ADDRESS=$(grep -o '"tax_wallet_address": "[^"]*' token_config.json | cut -d'"' -f4)
     TAX_TOKEN_ACCOUNT=$(grep -o '"tax_token_account": "[^"]*' token_config.json | cut -d'"' -f4)
     TAX_PERCENTAGE=$(grep -o '"tax_percentage": [^,]*' token_config.json | cut -d':' -f2 | tr -d ' ')
@@ -106,8 +124,16 @@ load_configs() {
     ETHP_TOKEN_ADDRESS=$(grep -o '"token_address": "[^"]*' ethp_config.json | cut -d'"' -f4)
     ETHP_KEYPAIR=$(grep -o '"token_keypair": "[^"]*' ethp_config.json | cut -d'"' -f4)
     ETHP_KEYPAIR="./keys/$(basename "$ETHP_KEYPAIR")"
-    SWAP_WALLET=$(grep -o '"swap_wallet": "[^"]*' ethp_config.json | cut -d'"' -f4)
-    SWAP_WALLET="./keys/$(basename "$SWAP_WALLET")"
+    SWAP_WALLET="./keys/swap_wallet.json"
+    # Ensure the swap wallet exists
+    if [[ ! -f "$SWAP_WALLET" ]]; then
+        log "ERROR" "Swap wallet not found: $SWAP_WALLET"
+        log "INFO" "Creating swap wallet..."
+        solana-keygen new --outfile "$SWAP_WALLET" --no-passphrase --force
+        chmod 600 "$SWAP_WALLET"
+        # Fund the new wallet
+        solana airdrop 1 $(solana-keygen pubkey "$SWAP_WALLET") || true
+    fi
     SWAP_WALLET_ADDRESS=$(grep -o '"swap_wallet_address": "[^"]*' ethp_config.json | cut -d'"' -f4)
     SWAP_TOKEN_ACCOUNT=$(grep -o '"swap_token_account": "[^"]*' ethp_config.json | cut -d'"' -f4)
     
@@ -211,7 +237,46 @@ simulate_eth_purchase() {
     
     # Calculate exchange rate
     # 1 TaxAI = 0.01 ETHP
-    local TAXAI_AMOUNT=$(spl-token balance "$TAXAI_TOKEN_ADDRESS" --owner "$TAX_WALLET_ADDRESS")
+    local AVAILABLE_AMOUNT=0
+    if spl-token accounts --verbose | grep -q "$TAXAI_TOKEN_ADDRESS"; then
+        AVAILABLE_AMOUNT=$(spl-token balance "$TAXAI_TOKEN_ADDRESS" 2>/dev/null || echo "0")
+    else
+        log "WARN" "Tax wallet does not have a TaxAI token account, creating one"
+        spl-token create-account "$TAXAI_TOKEN_ADDRESS" 2>/dev/null || true
+        AVAILABLE_AMOUNT=0
+    fi
+    
+    # For demonstration purposes, if no tax tokens are available, mint some
+    if [[ "$AVAILABLE_AMOUNT" -eq 0 ]]; then
+        log "INFO" "No TaxAI tokens available in tax wallet, minting some for demonstration"
+        # Get the tax token account
+        local TAX_TAXAI_ACCOUNT=$(spl-token accounts --verbose | grep "$TAXAI_TOKEN_ADDRESS" | awk '{print $3}')
+        
+        # Switch to token authority to mint tokens
+        solana config set --keypair "$TAXAI_KEYPAIR"
+        spl-token mint "$TAXAI_TOKEN_ADDRESS" 100 "$TAX_TAXAI_ACCOUNT"
+        log "INFO" "Minted 100 TaxAI tokens to tax wallet for demonstration"
+        
+        # Switch back to tax wallet
+        solana config set --keypair "$TAX_WALLET"
+        AVAILABLE_AMOUNT=100
+        transaction_delay
+    fi
+    
+    # Use the amount specified by the user via the --amount parameter or all available tokens
+    local TAXAI_AMOUNT
+    if [[ "$SWAP_AMOUNT" -gt 0 ]]; then
+        if [[ "$SWAP_AMOUNT" -gt "$AVAILABLE_AMOUNT" ]]; then
+            log "WARN" "Requested amount ($SWAP_AMOUNT) exceeds available balance ($AVAILABLE_AMOUNT), using all available tokens"
+            TAXAI_AMOUNT="$AVAILABLE_AMOUNT"
+        else
+            TAXAI_AMOUNT="$SWAP_AMOUNT"
+            log "INFO" "Using specified amount: $TAXAI_AMOUNT TaxAI tokens"
+        fi
+    else
+        TAXAI_AMOUNT="$AVAILABLE_AMOUNT"
+        log "INFO" "Using all available tokens: $TAXAI_AMOUNT TaxAI tokens"
+    fi
     
     # Check if bc is installed
     local ETHP_TO_RECEIVE

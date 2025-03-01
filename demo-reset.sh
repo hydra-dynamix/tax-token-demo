@@ -104,8 +104,8 @@ load_configs() {
     SWAP_TOKEN_ACCOUNT=$(grep -o '"swap_token_account": "[^"]*' ethp_config.json | cut -d'"' -f4)
     
     # Set paths for user wallets
-    SENDER_WALLET="./keys/sender.json"
-    RECIPIENT_WALLET="./keys/recipient.json"
+    SENDER_WALLET="./keys/sender_wallet.json"
+    RECIPIENT_WALLET="./keys/recipient_wallet.json"
     
     # Get addresses if wallet files exist
     if [[ -f "$SENDER_WALLET" ]]; then

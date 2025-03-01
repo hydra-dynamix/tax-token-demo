@@ -4,6 +4,7 @@ set -euo pipefail
 # Default settings
 FULL_SPEED=false
 TRANSACTION_DELAY=0.75
+TRANSFER_AMOUNT=1000
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -12,11 +13,20 @@ while [[ $# -gt 0 ]]; do
             FULL_SPEED=true
             shift
             ;;
+        --amount)
+            if [[ -z "$2" || "$2" =~ ^- ]]; then
+                echo "Error: --amount requires a numeric value"
+                exit 1
+            fi
+            TRANSFER_AMOUNT="$2"
+            shift 2
+            ;;
         --help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
             echo "  --full-speed    Disable transaction delays"
+            echo "  --amount NUM    Specify the amount to transfer (default: 1000)"
             echo "  --help          Display this help message"
             echo ""
             exit 0
@@ -125,7 +135,7 @@ create_user_wallets() {
     log "INFO" "Creating user wallets for demonstration"
     
     # Create sender wallet
-    SENDER_WALLET="./keys/sender.json"
+    SENDER_WALLET="./keys/sender_wallet.json"
     if [[ ! -f "$SENDER_WALLET" ]]; then
         solana-keygen new --outfile "$SENDER_WALLET" --no-passphrase --force
         chmod 600 "$SENDER_WALLET"
@@ -134,7 +144,7 @@ create_user_wallets() {
     log "INFO" "Sender wallet: $(abbreviate_address "$SENDER_ADDRESS")"
     
     # Create recipient wallet
-    RECIPIENT_WALLET="./keys/recipient.json"
+    RECIPIENT_WALLET="./keys/recipient_wallet.json"
     if [[ ! -f "$RECIPIENT_WALLET" ]]; then
         solana-keygen new --outfile "$RECIPIENT_WALLET" --no-passphrase --force
         chmod 600 "$RECIPIENT_WALLET"
@@ -269,7 +279,7 @@ simulate_transfer() {
     local TAX_BALANCE_BEFORE=$(spl-token balance "$TAXAI_TOKEN_ADDRESS" 2>/dev/null || echo "0")
     
     # Calculate transfer amount and tax
-    local TRANSFER_AMOUNT=10000
+    # Use the amount specified by the user via the --amount parameter
     # Use bc for floating point arithmetic
     if command -v bc &> /dev/null; then
         local TAX_AMOUNT=$(echo "scale=0; $TRANSFER_AMOUNT * $TAX_PERCENTAGE / 100" | bc)

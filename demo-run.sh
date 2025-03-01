@@ -4,6 +4,8 @@ set -euo pipefail
 # Default settings
 FULL_SPEED=false
 TRANSACTION_DELAY=1
+TRANSFER_AMOUNT=1000
+SWAP_AMOUNT=0
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -12,12 +14,30 @@ while [[ $# -gt 0 ]]; do
             FULL_SPEED=true
             shift
             ;;
+        --transfer-amount)
+            if [[ -z "$2" || "$2" =~ ^- ]]; then
+                echo "Error: --transfer-amount requires a numeric value"
+                exit 1
+            fi
+            TRANSFER_AMOUNT="$2"
+            shift 2
+            ;;
+        --swap-amount)
+            if [[ -z "$2" || "$2" =~ ^- ]]; then
+                echo "Error: --swap-amount requires a numeric value"
+                exit 1
+            fi
+            SWAP_AMOUNT="$2"
+            shift 2
+            ;;
         --help)
             echo "Usage: $0 [OPTIONS]"
             echo ""
             echo "Options:"
-            echo "  --full-speed    Disable transaction delays"
-            echo "  --help          Display this help message"
+            echo "  --full-speed         Disable transaction delays"
+            echo "  --transfer-amount NUM  Specify the amount to transfer (default: 1000)"
+            echo "  --swap-amount NUM      Specify the amount to swap (default: all available)"
+            echo "  --help               Display this help message"
             echo ""
             exit 0
             ;;
@@ -85,11 +105,20 @@ main() {
     log "INFO" "========================================================"
     log "INFO" "Step 2: Performing token transfer with tax"
     log "INFO" "========================================================"
+    
+    # Build the command with all parameters
+    TRANSFER_CMD="./tax_transfer.sh"
+    
     if [[ "$FULL_SPEED" == "true" ]]; then
-        ./tax_transfer.sh --full-speed
-    else
-        ./tax_transfer.sh
+        TRANSFER_CMD="$TRANSFER_CMD --full-speed"
     fi
+    
+    if [[ "$TRANSFER_AMOUNT" != "1000" ]]; then
+        TRANSFER_CMD="$TRANSFER_CMD --amount $TRANSFER_AMOUNT"
+    fi
+    
+    # Execute the command
+    $TRANSFER_CMD
     transaction_delay
     
     # Step 3: Display balances after transfer
@@ -105,11 +134,20 @@ main() {
     log "INFO" "========================================================"
     log "INFO" "Step 4: Performing tax swap for ETH proxy tokens"
     log "INFO" "========================================================"
+    
+    # Build the command with all parameters
+    SWAP_CMD="./tax_swap_simplified.sh"
+    
     if [[ "$FULL_SPEED" == "true" ]]; then
-        ./tax_swap_simplified.sh --full-speed
-    else
-        ./tax_swap_simplified.sh
+        SWAP_CMD="$SWAP_CMD --full-speed"
     fi
+    
+    if [[ "$SWAP_AMOUNT" != "0" ]]; then
+        SWAP_CMD="$SWAP_CMD --amount $SWAP_AMOUNT"
+    fi
+    
+    # Execute the command
+    $SWAP_CMD
     transaction_delay
     
     # Step 5: Display final balances

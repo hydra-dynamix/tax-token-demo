@@ -2,6 +2,12 @@
 
 This directory contains a complete demonstration of the TaxAI token system with tax collection and ETH proxy token swapping capabilities. The demo showcases a token with an automatic tax mechanism and demonstrates how collected taxes can be swapped for another token.
 
+## ⚠️ SECURITY NOTICE ⚠️
+
+These are publicly visible devnet keys, do not fund them with actual mainnet tokens or SOL. If you use these scripts please provide your own keys with the same names (you'll need to change the keys that have their public key as the name in the scripts). I take no personal responsibility for any lost funds or transaction errors caused by this script. Please use at your own risk.
+
+**IMPORTANT**: This demo is for educational purposes only and should not be used in production without proper security audits and key management.
+
 ## Overview
 
 The TaxAI token implements a 2.5% tax on all transfers. The collected taxes are sent to a dedicated tax wallet, which can then swap these tokens for ETH proxy tokens through a swap mechanism.
@@ -28,6 +34,24 @@ Before running the demo, ensure:
 2. You have created the TaxAI and ETH Proxy tokens using the provided scripts
 3. All scripts have executable permissions (`chmod +x *.sh`)
 
+### Environment Check
+
+You can verify your environment is properly set up by running:
+
+```bash
+./check_environment.sh
+```
+
+This script will:
+- Verify Solana CLI and SPL Token CLI installation
+- Check that you're connected to the correct network (devnet)
+- Validate the existence of required wallet keys
+- Confirm configuration files are present
+- Ensure all scripts have executable permissions
+- Display a security reminder about using demo keys
+
+The demo script will automatically run this check before execution.
+
 ### Using the Master Demo Script
 
 The `demo.sh` script provides a convenient way to run the entire demonstration with various options:
@@ -53,6 +77,19 @@ The `demo.sh` script provides a convenient way to run the entire demonstration w
 ./demo.sh --reset --full-speed
 # or
 ./demo.sh -r -f
+
+# Run the demo with a specific transfer amount (e.g., 500 tokens)
+./demo.sh --transfer-amount 500
+# or
+./demo.sh -t 500
+
+# Run the demo with a specific swap amount (e.g., swap only 10 tokens)
+./demo.sh --swap-amount 10
+# or
+./demo.sh -s 10
+
+# Combine multiple options
+./demo.sh -r -f -t 500 -s 10
 ```
 
 ### Demo Execution Flow
@@ -61,12 +98,12 @@ When you run the demo, it will:
 
 1. Display initial balances of all wallets
 2. Perform a token transfer with automatic 2.5% tax collection
-   - Sender transfers 10,000 TaxAI tokens
-   - 9,750 tokens go to the recipient (97.5%)
-   - 250 tokens go to the tax wallet (2.5%)
+   - By default, sender transfers 1,000 TaxAI tokens (customizable with --transfer-amount)
+   - 97.5% of tokens go to the recipient
+   - 2.5% of tokens go to the tax wallet
 3. Display updated balances after the transfer
 4. Swap collected taxes for ETH proxy tokens
-   - Tax wallet sends collected TaxAI tokens to the swap wallet
+   - Tax wallet sends collected TaxAI tokens to the swap wallet (customizable with --swap-amount)
    - Swap wallet sends ETH proxy tokens to the tax wallet (at 1:0.01 rate)
 5. Display final balances after the swap
 
@@ -104,10 +141,10 @@ You can also run each script individually for more granular control:
 ./display_balances.sh
 
 # Perform token transfer with tax collection
-./tax_transfer.sh [--full-speed]
+./tax_transfer.sh [--full-speed] [--amount NUM]
 
 # Swap collected taxes for ETH proxy tokens
-./tax_swap_simplified.sh [--full-speed]
+./tax_swap_simplified.sh [--full-speed] [--amount NUM]
 
 # Run the complete demo sequence
 ./demo-run.sh [--full-speed]
@@ -116,7 +153,7 @@ You can also run each script individually for more granular control:
 ./demo-reset.sh [--full-speed]
 ```
 
-All scripts that perform transactions support the `--full-speed` flag to disable the 0.75s delay between transactions.
+All scripts that perform transactions support the `--full-speed` flag to disable the 0.75s delay between transactions. The `tax_transfer.sh` and `tax_swap_simplified.sh` scripts also support the `--amount` parameter to specify the amount of tokens to transfer or swap.
 
 ## Key Components
 
@@ -186,6 +223,27 @@ ETHP_TO_RECEIVE=$(echo "scale=2; $TAXAI_AMOUNT * 0.01" | bc)
    ```
 
 4. **Transaction Errors**: If you encounter Solana transaction errors, try increasing the transaction delay or check your Solana configuration.
+
+### Using Your Own Keys
+
+To use your own keys instead of the provided demo keys:
+
+1. Generate new keypairs for each wallet:
+   ```bash
+   solana-keygen new -o keys/sender_wallet.json --no-bip39-passphrase
+   solana-keygen new -o keys/recipient_wallet.json --no-bip39-passphrase
+   solana-keygen new -o keys/tax_wallet.json --no-bip39-passphrase
+   solana-keygen new -o keys/swap_wallet.json --no-bip39-passphrase
+   ```
+
+2. Fund your wallets with devnet SOL:
+   ```bash
+   solana airdrop 2 $(solana-keygen pubkey keys/sender_wallet.json) --url devnet
+   solana airdrop 2 $(solana-keygen pubkey keys/tax_wallet.json) --url devnet
+   solana airdrop 2 $(solana-keygen pubkey keys/swap_wallet.json) --url devnet
+   ```
+
+3. Update any scripts that reference the wallet public keys directly.
 
 ## Explorer links
 [Eth Token Proxy / ethyUia...1QrA](https://explorer.solana.com/address/ethyUiaWJQUbbct51haurMrY2wKYfHZL2W34FxD1QrA?cluster=devnet)

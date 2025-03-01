@@ -45,39 +45,34 @@ log() {
 load_configs() {
     log "INFO" "Loading token configurations"
     
-    if [[ ! -f "../token_config.json" ]]; then
+    if [[ ! -f "./token_config.json" ]]; then
         log "ERROR" "token_config.json not found. Please run create_taxai_token.sh first."
         exit 1
     fi
     
-    if [[ ! -f "../ethp_config.json" ]]; then
+    if [[ ! -f "./ethp_config.json" ]]; then
         log "ERROR" "ethp_config.json not found. Please run create_eth_proxy.sh first."
         exit 1
     fi
     
     # Load TaxAI token configuration
-    TAXAI_TOKEN_ADDRESS=$(grep -o '"token_address": "[^"]*' ../token_config.json | cut -d'"' -f4)
-    TAXAI_KEYPAIR=$(grep -o '"token_keypair": "[^"]*' ../token_config.json | cut -d'"' -f4)
-    TAXAI_KEYPAIR="../${TAXAI_KEYPAIR}"
-    TAX_WALLET=$(grep -o '"tax_wallet": "[^"]*' ../token_config.json | cut -d'"' -f4)
-    # Fix paths to be relative to the current directory
-    TAX_WALLET="../${TAX_WALLET}"
-    TAX_WALLET_ADDRESS=$(grep -o '"tax_wallet_address": "[^"]*' ../token_config.json | cut -d'"' -f4)
-    TAX_TOKEN_ACCOUNT=$(grep -o '"tax_token_account": "[^"]*' ../token_config.json | cut -d'"' -f4)
-    TAX_PERCENTAGE=$(grep -o '"tax_percentage": [^,]*' ../token_config.json | cut -d':' -f2 | tr -d ' ')
+    TAXAI_TOKEN_ADDRESS=$(grep -o '"token_address": "[^"]*' ./token_config.json | cut -d'"' -f4)
+    TAXAI_KEYPAIR="./keys/token-keypair.json"
+    TAX_WALLET="./keys/tax_wallet.json"
+    TAX_WALLET_ADDRESS=$(grep -o '"tax_wallet_address": "[^"]*' ./token_config.json | cut -d'"' -f4)
+    TAX_TOKEN_ACCOUNT=$(grep -o '"tax_token_account": "[^"]*' ./token_config.json | cut -d'"' -f4)
+    TAX_PERCENTAGE=$(grep -o '"tax_percentage": [^,]*' ./token_config.json | cut -d':' -f2 | tr -d ' ')
     
     # Load ETH Proxy token configuration
-    ETHP_TOKEN_ADDRESS=$(grep -o '"token_address": "[^"]*' ../ethp_config.json | cut -d'"' -f4)
-    ETHP_KEYPAIR=$(grep -o '"token_keypair": "[^"]*' ../ethp_config.json | cut -d'"' -f4)
-    ETHP_KEYPAIR="../${ETHP_KEYPAIR}"
-    SWAP_WALLET=$(grep -o '"swap_wallet": "[^"]*' ../ethp_config.json | cut -d'"' -f4)
-    SWAP_WALLET="../${SWAP_WALLET}"
-    SWAP_WALLET_ADDRESS=$(grep -o '"swap_wallet_address": "[^"]*' ../ethp_config.json | cut -d'"' -f4)
-    SWAP_TOKEN_ACCOUNT=$(grep -o '"swap_token_account": "[^"]*' ../ethp_config.json | cut -d'"' -f4)
+    ETHP_TOKEN_ADDRESS=$(grep -o '"token_address": "[^"]*' ./ethp_config.json | cut -d'"' -f4)
+    ETHP_KEYPAIR="./keys/ethp-keypair.json"
+    SWAP_WALLET="./keys/swap_wallet.json"
+    SWAP_WALLET_ADDRESS=$(grep -o '"swap_wallet_address": "[^"]*' ./ethp_config.json | cut -d'"' -f4)
+    SWAP_TOKEN_ACCOUNT=$(grep -o '"swap_token_account": "[^"]*' ./ethp_config.json | cut -d'"' -f4)
     
     # Set paths for user wallets
-    SENDER_WALLET="../keys/sender.json"
-    RECIPIENT_WALLET="../keys/recipient.json"
+    SENDER_WALLET="./keys/sender_wallet.json"
+    RECIPIENT_WALLET="./keys/recipient_wallet.json"
     
     # Get addresses if wallet files exist
     if [[ -f "$SENDER_WALLET" ]]; then
