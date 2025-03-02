@@ -1,9 +1,8 @@
 {
-    "name": "TaxAI Token Demo",
+    "name": "SPL Tax Token Demo",
     "build": {
         "dockerfile": "Dockerfile"
     },
-    "workspaceFolder": "/workspaces/tax_token",
     "customizations": {
         "vscode": {
             "extensions": [
